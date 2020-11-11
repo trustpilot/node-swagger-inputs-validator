@@ -3,7 +3,8 @@ var express = require('express');
 var assert = require('assert');
 var bodyParser = require('body-parser');
 
-var swaggerInputValidator = require('../module.js');
+var swaggerInputValidator = require('../src/module.js');
+const { response } = require('express');
 
 describe('Wrong instanciations', function() {
   var swaggerFile;
@@ -110,16 +111,16 @@ describe('When parameters are missing', function(){
     swaggerFile = require('./../swagger-examples/UberAPI.json');
   });
 
-  it('should return an HTTP 400 code when only one parameter is missing (GET/query)', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).get("/products"));
+  it('should return an HTTP 400 code when only one parameter is missing (GET/query) 1', function(done){
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).get("/products"));
     request.agent(server)
     .get('/v1/products?longitude=50')
     .expect(400, "Error: Parameter : latitude is not specified.\n")
     .end(done);
   });
 
-  it('should return an HTTP 400 code when only one parameter is missing (GET/query)', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).get("/products"));
+  it('should return an HTTP 400 code when only one parameter is missing (GET/query) 2', function(done){
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).get("/products"));
     request.agent(server)
     .get('/v1/products?latitude=50')
     .expect(400, "Error: Parameter : longitude is not specified.\n")
@@ -127,7 +128,7 @@ describe('When parameters are missing', function(){
   });
 
   it('should return an HTTP 400 code when all parameters are missing (GET/query)', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).get("/products"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).get("/products"));
     request.agent(server)
     .get('/v1/products')
     .expect(400, "Error: Parameter : latitude is not specified.,Error: Parameter : longitude is not specified.\n")
@@ -135,7 +136,7 @@ describe('When parameters are missing', function(){
   });
 
   it('should return an HTTP 400 code when parameters are missing (POST / query + formData)', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).post("/users"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).post("/users"));
     request.agent(server)
     .post('/v1/users?name=Bart')
     .set('Content-Type', 'application/json')
@@ -145,7 +146,7 @@ describe('When parameters are missing', function(){
   });
 
   it('should return an HTTP 400 code when parameters are missing (PUT / query + formData)', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).put("/users"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).put("/users"));
     request.agent(server)
     .put('/v1/users?surname=Simpson')
     .set('Content-Type', 'application/json')
@@ -155,7 +156,7 @@ describe('When parameters are missing', function(){
   });
 
   it('should return an HTTP 400 code when parameters are missing (DELETE / query)', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).delete("/users"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).delete("/users"));
     request.agent(server)
     .delete('/v1/users?surname=Simpson')
     .expect(400, "Error: Parameter : name is not specified.\n")
@@ -163,7 +164,7 @@ describe('When parameters are missing', function(){
   });
 
   it('should return an HTTP 400 code when parameters are missing in body (no encapsulation)', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).post("/orders"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).post("/orders"));
     request.agent(server)
     .post('/v1/orders')
     .set('Content-Type', 'application/json')
@@ -175,8 +176,13 @@ describe('When parameters are missing', function(){
 });
 
 describe('format testing', function(){
+  var server;
+  before(function(){
+    swaggerFile = require('./../swagger-examples/UberAPI.json');
+  });
+
   it('should block request waiting for a non proper double', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).get("/products"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).get("/products"));
     request.agent(server)
     .get('/v1/products?longitude=50.0.0&latitude=50')
     .expect(400, "Error: Parameter : longitude does not respect its type.\n")
@@ -184,7 +190,7 @@ describe('format testing', function(){
   });
 
   it('should block request waiting for double and sending instead string', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).get("/products"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).get("/products"));
     request.agent(server)
     .get('/v1/products?longitude=should not work&latitude=50')
     .expect(400, "Error: Parameter : longitude does not respect its type.\n")
@@ -192,7 +198,7 @@ describe('format testing', function(){
   })
 
   it('should block request waiting for integer and sending a float', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).get("/products"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).get("/products"));
     request.agent(server)
     .get('/v1/products?longitude=50&latitude=50&optionalInt=50.50')
     .expect(400, "Error: Parameter : optionalInt does not respect its type.\n")
@@ -200,7 +206,7 @@ describe('format testing', function(){
   })
 
   it('should block request waiting for integer and sending a string', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).get("/products"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).get("/products"));
     request.agent(server)
     .get('/v1/products?longitude=50&latitude=50&optionalInt=shouldGoInError')
     .expect(400, "Error: Parameter : optionalInt does not respect its type.\n")
@@ -208,7 +214,7 @@ describe('format testing', function(){
   })
 
   it('should block request waiting for integer (in formData) and sending a string', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).post("/users"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).post("/users"));
     request.agent(server)
     .post('/v1/users?name=Bart&surname=Simpson')
     .set('Content-Type', 'application/json')
@@ -219,7 +225,7 @@ describe('format testing', function(){
 
   it('should block request waiting for an int (in path) and sending a string', function(done){
     var app = express();
-    app.get('/v1/users/:id', new swaggerInputValidator(swaggerFile).get("/users/:id"), function(req, res){
+    app.get('/v1/users/:id', new swaggerInputValidator(swaggerFile, { onError: errorHandler}).get("/users/:id"), function(req, res){
       res.status(200).json({ success: 'If you can enter here, it means that the swagger middleware let you do so' });
     });
 
@@ -230,7 +236,7 @@ describe('format testing', function(){
   })
 
   it('should block request waiting for boolean (in formData) and sending a string', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).post("/users"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).post("/users"));
     request.agent(server)
     .post('/v1/users?name=Bart&surname=Simpson')
     .set('Content-Type', 'application/json')
@@ -240,7 +246,7 @@ describe('format testing', function(){
   })
 
   it('should NOT block request waiting for boolean (as formData) and sending a string which looks like a boolean', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).post("/users"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).post("/users"));
     request.agent(server)
     .post('/v1/users?name=Bart&surname=Simpson')
     .set('Content-Type', 'application/x-www-form-urlencoded')
@@ -249,8 +255,8 @@ describe('format testing', function(){
     .end(done);
   })
 
-  it('should block request when complex object is sent within the body and don\'t respect its type', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).post("/estimates/time"));
+  it('should block request when complex object is sent within the body and don\'t respect its type 1', function(done){
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).post("/estimates/time"));
     request.agent(server)
     .post('/v1/estimates/time')
     .set('Content-Type', 'application/json')
@@ -259,8 +265,8 @@ describe('format testing', function(){
     .end(done);
   })
 
-  it('should block request when complex object is sent within the body and don\'t respect its type', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).post("/estimates/time"));
+  it('should block request when complex object is sent within the body and don\'t respect its type 2', function(done){
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).post("/estimates/time"));
     request.agent(server)
     .post('/v1/estimates/time')
     .set('Content-Type', 'application/json')
@@ -270,7 +276,7 @@ describe('format testing', function(){
   })
 
   it('should block request when complex object is sent within the body and don\'t respect its type (second level)', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).post("/estimates/time"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).post("/estimates/time"));
     request.agent(server)
     .post('/v1/estimates/time')
     .set('Content-Type', 'application/json')
@@ -283,7 +289,7 @@ describe('format testing', function(){
   })
 
   it('should block request when waiting for an array of string and sending array of int', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).post("/estimates/time"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).post("/estimates/time"));
     request.agent(server)
     .post('/v1/estimates/time')
     .set('Content-Type', 'application/json')
@@ -295,7 +301,7 @@ describe('format testing', function(){
   })
 
   it('should block request when waiting for an array of string and sending a mixed array ', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).post("/estimates/time"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).post("/estimates/time"));
     request.agent(server)
     .post('/v1/estimates/time')
     .set('Content-Type', 'application/json')
@@ -307,7 +313,7 @@ describe('format testing', function(){
   })
 
   it('should return an HTTP 400 code when parameters in body do not respet their type (no encapsulation)', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).post("/orders"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler}).post("/orders"));
     request.agent(server)
     .post('/v1/orders')
     .set('Content-Type', 'application/json')
@@ -318,9 +324,13 @@ describe('format testing', function(){
 });
 
 describe('AllowNull = true / AllowNull = false', function(){
+  var server;
+  before(function(){
+    swaggerFile = require('./../swagger-examples/UberAPI.json');
+  });
 
   it('should block request when null value is sent and allowNull is false', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile, {allowNull : false}).post("/estimates/time"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, {allowNull : false, onError: errorHandler}).post("/estimates/time"));
     request.agent(server)
     .post('/v1/estimates/time')
     .set('Content-Type', 'application/json')
@@ -330,7 +340,7 @@ describe('AllowNull = true / AllowNull = false', function(){
   })
 
   it('should not block request when null value is sent and allowNull is true', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile, {allowNull : true}).post("/estimates/time"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, {allowNull : true, onError: errorHandler}).post("/estimates/time"));
     request.agent(server)
     .post('/v1/estimates/time')
     .set('Content-Type', 'application/json')
@@ -340,7 +350,7 @@ describe('AllowNull = true / AllowNull = false', function(){
   })
 
   it('should block request when null is set to an array value is sent and allowNull is false', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile, {allowNull : false}).post("/estimates/time"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, {allowNull : false, onError: errorHandler}).post("/estimates/time"));
     request.agent(server)
     .post('/v1/estimates/time')
     .set('Content-Type', 'application/json')
@@ -353,7 +363,7 @@ describe('AllowNull = true / AllowNull = false', function(){
   })
 
   it('should return an HTTP 400 code when parameter in body contains null value and allowNull = false (no encapsulation))', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile, {allowNull : false}).post("/orders"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, {allowNull : false, onError: errorHandler}).post("/orders"));
     request.agent(server)
     .post('/v1/orders')
     .set('Content-Type', 'application/json')
@@ -367,7 +377,7 @@ describe('Handle enum properties', function(){
   var server;
   before(function(){
     swaggerFile = require('./../swagger-examples/UberAPI.json');
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).get("/history"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, {onError: errorHandler}).get("/history"));
   });
 
   it('should block request if parameter in query does not respected authorized values', function(done){
@@ -402,14 +412,14 @@ describe('Custom errorHandling', function(){
     .end(done);
   });
 
-  it('should return an HTTP 501 code when only one parameter is missing', function(done){
+  it('should return an HTTP 501 code when only one parameter is missing 1', function(done){
     request.agent(server)
     .get('/v1/products?longitude=50')
     .expect(501, {error : "Custom Error"})
     .end(done);
   });
 
-  it('should return an HTTP 501 code when only one parameter is missing', function(done){
+  it('should return an HTTP 501 code when only one parameter is missing 2', function(done){
     request.agent(server)
     .get('/v1/products?latitude=50')
     .expect(501, {error : "Custom Error"})
@@ -421,9 +431,9 @@ describe('strict / no strict mode', function(){
   var server;
   before(function(){
     swaggerFile = require('./../swagger-examples/UberAPI.json');
-    serverInStrictMode = createFakeServer(new swaggerInputValidator(swaggerFile, {strict: true}).get("/products"));
-    serverNotInStrictMode = createFakeServer(new swaggerInputValidator(swaggerFile, {strict: false}).get("/products"));
-    serverInStrictModeAndWaitingForComplexObject = createFakeServer(new swaggerInputValidator(swaggerFile, {strict: true}).post("/estimates/time"));
+    serverInStrictMode = createFakeServer(new swaggerInputValidator(swaggerFile, {strict: true, onError: errorHandler}).get("/products"));
+    serverNotInStrictMode = createFakeServer(new swaggerInputValidator(swaggerFile, {strict: false, onError: errorHandler}).get("/products"));
+    serverInStrictModeAndWaitingForComplexObject = createFakeServer(new swaggerInputValidator(swaggerFile, {strict: true, onError: errorHandler}).post("/estimates/time"));
   });
 
   it('should return an HTTP 200 code when extra is provided and strict = false', function(done){
@@ -463,7 +473,7 @@ describe('strict / no strict mode', function(){
   });
 
   it('should return an HTTP 400 code when parameters in body do not respet their type (no encapsulation)', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile, {strict : true}).post("/orders"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, {strict : true, onError: errorHandler}).post("/orders"));
     request.agent(server)
     .post('/v1/orders')
     .set('Content-Type', 'application/json')
@@ -565,7 +575,7 @@ describe('All parameters provided', function(){
     .end(done);
   });
 
-  it('should return an HTTP 200 code in POST (query + formData)', function(done){
+  it('should return an HTTP 200 code in POST (query + formData) 1', function(done){
     server = createFakeServer(new swaggerInputValidator(swaggerFile).post("/users"));
     request.agent(server)
     .post('/v1/users?name=Bart&surname=Simpson')
@@ -575,8 +585,8 @@ describe('All parameters provided', function(){
     .end(done);
   });
 
-  it('should return an HTTP 200 code in POST (query + formData)', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).put("/users"));
+  it('should return an HTTP 200 code in POST (query + formData) 2', function(done){
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler }).put("/users"));
     request.agent(server)
     .put('/v1/users?name=Bart&surname=Simpson')
     .set('Content-Type', 'application/json')
@@ -586,7 +596,7 @@ describe('All parameters provided', function(){
   });
 
   it('should allows empty arrays in body', function(done){
-    server = createFakeServer(new swaggerInputValidator(swaggerFile).post("/estimates/time"));
+    server = createFakeServer(new swaggerInputValidator(swaggerFile, { onError: errorHandler }).post("/estimates/time"));
     request.agent(server)
     .post('/v1/estimates/time')
     .set('Content-Type', 'application/json')
@@ -610,7 +620,8 @@ describe('All parameters provided', function(){
 describe('Control all requests',function(){
   var server;
   before(function(){
-    var middleware = new swaggerInputValidator(swaggerFile);
+    swaggerFile = require('./../swagger-examples/UberAPI.json');
+    var middleware = new swaggerInputValidator(swaggerFile, { onError: errorHandler });
     server = createFakeServer(middleware.all());
   });
 
@@ -643,8 +654,6 @@ describe('Control all requests',function(){
     .expect(404)
     .end(done);
   })
-
-
 });
 
 function createFakeServer(swaggerMiddleware){
@@ -664,3 +673,14 @@ function createFakeServer(swaggerMiddleware){
 
   return app;
 };
+
+
+function errorHandler(err, req, res, next) {
+  const error = err.map((x) => `Error: ${x.message}`).join(",")+"\n";
+
+  res.status(400).send(error);
+}
+
+function assertContains(source, text) {
+  assert(source.indexOf(text) > -1);
+}
