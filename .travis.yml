@@ -1,6 +1,26 @@
+dist: focal
+
 language: node_js
-node_js:
-  - "4.1"
-  - "4.0"
-  - "0.12"
-  - "0.11"
+
+node_js: null
+
+before_install:
+  - git clone -b 'v1' --depth 1 https://$GITHUB_TOKEN@github.com/trustpilot/build-scripts.git
+  - build-scripts/travis/init
+
+install:
+  - npm ci
+
+script:
+  - npm run lint
+  - npm run test
+
+after_success:
+  - npx semantic-release --extends @trustpilot/semanticrelease-config
+
+branches:
+  only:
+    - master
+
+notifications:
+  email: false
