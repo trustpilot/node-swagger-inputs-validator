@@ -621,8 +621,10 @@ export class SwaggerInputsValidator {
         return parameterToControl === 'true' || parameterToControl === 'false';
 
       case 'string':
-        //ToDo check its format
-        return true;
+        return (
+          Object.prototype.toString.call(parameterToControl) ===
+          '[object String]'
+        );
     }
   };
 
