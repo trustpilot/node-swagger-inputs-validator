@@ -2,7 +2,7 @@
   "name": "@trustpilot/swagger-inputs-validator",
   "version": "1.0.0",
   "description": "Lightweight Express middleware that allows the validation of incoming parameters.",
-  "main": "module.js",
+  "main": "index.js",
   "author": "michwii,trustpilot",
   "license": "MIT",
   "bugs": {
@@ -26,29 +26,43 @@
     "@commitlint/config-conventional": "^11.0.0",
     "@trustpilot/semanticrelease-config": "^2.0.2",
     "@types/express": "^4.17.8",
-    "eslint": "^7.13.0",
-    "eslint-config-prettier": "^6.15.0",
+    "@types/mocha": "^8.0.4",
+    "@types/supertest": "^2.0.10",
+    "@typescript-eslint/eslint-plugin": "^4.9.0",
+    "@typescript-eslint/parser": "^4.9.0",
+    "copyfiles": "^2.4.1",
+    "eslint": "^7.15.0",
+    "eslint-config-prettier": "^7.0.0",
     "eslint-config-trustpilot": "^4.5.1",
     "eslint-plugin-babel": "^5.3.1",
-    "eslint-plugin-prettier": "^3.1.4",
+    "eslint-plugin-prettier": "^3.2.0",
     "express": "^4.17.1",
     "husky": "^4.3.0",
     "mocha": "^8.2.1",
-    "prettier": "^2.1.2",
-    "supertest": "^6.0.1"
+    "prettier": "^2.2.1",
+    "rimraf": "^3.0.2",
+    "supertest": "^6.0.1",
+    "ts-mocha": "^8.0.0",
+    "typescript": "^4.1.2"
   },
   "peerDependencies": {
     "express": "^4.16.0"
   },
   "scripts": {
-    "lint": "prettier --check '**/*.js'",
-    "lint:fix": "prettier --write '**/*.js'",
-    "test": "mocha test"
+    "clean": "rimraf ./dist",
+    "compile": "tsc --project .",
+    "build": "npm run clean && npm run compile",
+    "copy-files": "copyfiles package.json dist",
+    "setup-link": "npm run build && npm run copy-files && && cd dist npm link",
+    "lint": "prettier --check './src/**/*.ts' --check './test/**/*.ts'",
+    "lint:fix": "prettier --write './src/**/*.ts' --write './test/**/*.ts'",
+    "test": "ts-mocha -p ./tsconfig.json test/**/*.spec.ts",
+    "watch": "tsc --watch --project ."
   },
   "husky": {
     "hooks": {
       "commit-msg": "npx commitlint -E HUSKY_GIT_PARAMS --extends @commitlint/config-conventional",
-      "pre-push": "npm run lint"
+      "pre-push": "npm run lint && npm test"
     }
   }
 }
