@@ -211,7 +211,10 @@ describe('format testing', () => {
     request
       .agent(server)
       .get('/v1/products?longitude=50.0.0&latitude=50')
-      .expect(400, 'Error: Parameter : longitude does not respect its type.\n')
+      .expect(
+        400,
+        "Error: Parameter : longitude does not respect its type (or if an array, at least one element isn't a primitive).\n"
+      )
       .end(done);
   });
 
@@ -224,7 +227,10 @@ describe('format testing', () => {
     request
       .agent(server)
       .get('/v1/products?longitude=should not work&latitude=50')
-      .expect(400, 'Error: Parameter : longitude does not respect its type.\n')
+      .expect(
+        400,
+        "Error: Parameter : longitude does not respect its type (or if an array, at least one element isn't a primitive).\n"
+      )
       .end(done);
   });
 
@@ -239,7 +245,7 @@ describe('format testing', () => {
       .get('/v1/products?longitude=50&latitude=50&optionalInt=50.50')
       .expect(
         400,
-        'Error: Parameter : optionalInt does not respect its type.\n'
+        "Error: Parameter : optionalInt does not respect its type (or if an array, at least one element isn't a primitive).\n"
       )
       .end(done);
   });
@@ -255,7 +261,7 @@ describe('format testing', () => {
       .get('/v1/products?longitude=50&latitude=50&optionalInt=shouldGoInError')
       .expect(
         400,
-        'Error: Parameter : optionalInt does not respect its type.\n'
+        "Error: Parameter : optionalInt does not respect its type (or if an array, at least one element isn't a primitive).\n"
       )
       .end(done);
   });

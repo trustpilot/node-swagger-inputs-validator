@@ -228,7 +228,7 @@ export class SwaggerInputsValidator {
                 new Error(
                   'Parameter : ' +
                     parameter.name +
-                    ' does not respect its type.'
+                    " does not respect its type (or if an array, at least one element isn't a primitive)."
                 )
               );
             }
@@ -599,6 +599,10 @@ export class SwaggerInputsValidator {
       return NaN;
     };
 
+    var isPrimitive = function (test: any) {
+      return test !== Object(test);
+    };
+
     //The parameter is specified either in query / path / header or formData
     //Therefor it means that the incoming parameter is a for sure a string but me have to check anyway its type
     //let's check first its type
@@ -619,6 +623,21 @@ export class SwaggerInputsValidator {
 
       case 'boolean':
         return parameterToControl === 'true' || parameterToControl === 'false';
+
+      case 'array':
+        if (
+          Object.prototype.toString.call(parameterToControl) !==
+          '[object Array]'
+        )
+          return false;
+
+        parameterToControl.forEach((x: any) => {
+          if (!isPrimitive(x)) {
+            return false;
+          }
+        });
+
+        return true;
 
       case 'string':
         return (
