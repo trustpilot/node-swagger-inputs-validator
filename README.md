@@ -39,8 +39,9 @@ $ npm install @trustpilot/swagger-inputs-validator --save
 ## Usage
 ```TypeScript
 import express from "express";
-import { Validator } from "@trustpilot/swagger-request-validator";
+import { ErrorHandler, Validator } from "@trustpilot/swagger-request-validator";
 import yaml from "yamljs";
+import logger from "@trustpilot/logger";
 
 const apiDescription = yaml.load("path/to/swagger.yaml");
 
@@ -52,10 +53,18 @@ app.use(express.json());
 
 // Ensure base path is ""
 const apiDescriptionNoBasepath = {...apiDescription, basePath: ""}
+
+// Create your own OnError function
 const errorHandler = (errors, req, res) => {
   res.status(400);//You could choose a custom error code
   res.json({message : "This message is coming from a custom error handler.", errors});
 };
+// or use the provided factory
+const errorHandlerOptions = {
+  logger: (obj) => logger.info(obj)
+};
+const errorHandler = ErrorHandler.create(errorHandlerOptions);
+
 const swaggerInputValidator = new Validator.SwaggerInputValidator(
   apiDescriptionNoBasepath,
   {
