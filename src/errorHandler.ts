@@ -33,11 +33,7 @@ export const create = (options?: ErrorHandlerOptions): OnError => {
     let errorsForLog;
     let errors;
 
-    if (err.length === 1) {
-      errorsForLog = [errMapper(err[0])];
-    } else {
-      errorsForLog = err.map(errMapper);
-    }
+    errorsForLog = err.map(errMapper);
     errors = err.map((e) => e.message);
 
     if (log) {
