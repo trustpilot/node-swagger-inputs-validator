@@ -587,7 +587,7 @@ export class SwaggerInputsValidator {
   private simpleTypeChecking = (
     parameterToControl: any,
     swaggerParameter: any
-  ) => {
+  ): boolean => {
     var filterInt = function (value: string) {
       if (/^(\-|\+)?([0-9]+|Infinity)$/.test(value)) return Number(value);
       return NaN;
@@ -597,10 +597,6 @@ export class SwaggerInputsValidator {
       if (/^(\-|\+)?([0-9]+(\.[0-9]+)?|Infinity)$/.test(value))
         return Number(value);
       return NaN;
-    };
-
-    var isPrimitive = function (test: any) {
-      return test !== Object(test);
     };
 
     //The parameter is specified either in query / path / header or formData
@@ -625,25 +621,38 @@ export class SwaggerInputsValidator {
         return parameterToControl === 'true' || parameterToControl === 'false';
 
       case 'array':
-        if (
-          Object.prototype.toString.call(parameterToControl) !==
-          '[object Array]'
-        )
-          return false;
+        const paramType = Object.prototype.toString.call(parameterToControl);
+        if (paramType !== '[object Array]') {
+          // In case there is only one item, it is not parsed as an array.
 
-        parameterToControl.forEach((x: any) => {
-          if (!isPrimitive(x)) {
+          // Nested arrays isn't allowed
+          if (swaggerParameter.items.type === 'array') {
             return false;
           }
+
+          // Validate that the type is same as item type in the swagger array declaration
+          return this.simpleTypeChecking(parameterToControl, {
+            type: swaggerParameter.items.type,
+          });
+        }
+
+        // Validate that the type of each item is the same as the type in the swagger array declaration
+        const invalidItem = parameterToControl.find((x: any) => {
+          return !this.simpleTypeChecking(x, {
+            type: swaggerParameter.items.type,
+          });
         });
 
-        return true;
+        return !!!invalidItem;
 
       case 'string':
         return (
           Object.prototype.toString.call(parameterToControl) ===
           '[object String]'
         );
+
+      default:
+        return false;
     }
   };
 

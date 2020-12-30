@@ -461,6 +461,143 @@ describe('format testing', () => {
   });
 });
 
+describe('query param array validation', () => {
+  var server: Application;
+  var swaggerFile: any;
+  before(() => {
+    swaggerFile = require('../swagger-examples/UberAPI.json');
+  });
+
+  it('should resolve as a normal param when specified as array in swagger and only 1 item and array item type matches param type', (done) => {
+    var app = express();
+
+    app.get(
+      '/v1/testQueryParamArrayOfIntegers',
+      new Validator.SwaggerInputsValidator(swaggerFile, {
+        onError: errorHandler,
+      }).get('/testQueryParamArrayOfIntegers'),
+      function (req, res) {
+        res.status(200).json({
+          param: req.query.param,
+        });
+      }
+    );
+
+    request
+      .agent(app)
+      .get('/v1/testQueryParamArrayOfIntegers?param=1')
+      .expect(200, { param: '1' })
+      .end(done);
+  });
+
+  it('should fail when specified as array in swagger and only 1 item in query and its type doesnt matches param type', (done) => {
+    var app = express();
+
+    app.get(
+      '/v1/testQueryParamArrayOfIntegers',
+      new Validator.SwaggerInputsValidator(swaggerFile, {
+        onError: errorHandler,
+      }).get('/testQueryParamArrayOfIntegers')
+    );
+
+    request
+      .agent(app)
+      .get('/v1/testQueryParamArrayOfIntegers?param=a')
+      .expect((res) => {
+        JSON.stringify(res.body);
+      })
+      .expect(
+        400,
+        "Error: Parameter : param does not respect its type (or if an array, at least one element doesn't respect the item type).\n"
+      )
+      .end(done);
+  });
+
+  it('should resolve as array when specified as array in swagger (2 array items)', (done) => {
+    var app = express();
+
+    app.get(
+      '/v1/testQueryParamArrayOfIntegers',
+      new Validator.SwaggerInputsValidator(swaggerFile, {
+        onError: errorHandler,
+      }).get('/testQueryParamArrayOfIntegers'),
+      function (req, res) {
+        res.status(200).json({
+          param: req.query.param,
+        });
+      }
+    );
+
+    request
+      .agent(app)
+      .get('/v1/testQueryParamArrayOfIntegers?param=1&param=2')
+      .expect(200, { param: ['1', '2'] })
+      .end(done);
+  });
+
+  it('should fail when specified as array of <item type that is not string> in swagger and items in query is of a different type', (done) => {
+    var app = express();
+
+    app.get(
+      '/v1/testQueryParamArrayOfIntegers',
+      new Validator.SwaggerInputsValidator(swaggerFile, {
+        onError: errorHandler,
+      }).get('/testQueryParamArrayOfIntegers')
+    );
+
+    request
+      .agent(app)
+      .get('/v1/testQueryParamArrayOfIntegers?param=a&param=a')
+      .expect(
+        400,
+        "Error: Parameter : param does not respect its type (or if an array, at least one element doesn't respect the item type).\n"
+      )
+      .end(done);
+  });
+
+  it('should resolve as array when array items are specified as string in swagger and items in query is of a different type', (done) => {
+    var app = express();
+
+    app.get(
+      '/v1/testQueryParamArrayOfStrings',
+      new Validator.SwaggerInputsValidator(swaggerFile, {
+        onError: errorHandler,
+      }).get('/testQueryParamArrayOfStrings'),
+      function (req, res) {
+        res.status(200).json({
+          param: req.query.param,
+        });
+      }
+    );
+
+    request
+      .agent(app)
+      .get('/v1/testQueryParamArrayOfStrings?param=1&param=2')
+      .expect(200, { param: ['1', '2'] })
+      .end(done);
+  });
+
+  it('should error query params indicate an array but is not defined as array in swagger', (done) => {
+    var app = express();
+
+    app.get(
+      '/v1/testQueryParamNotArray',
+      new Validator.SwaggerInputsValidator(swaggerFile, {
+        onError: errorHandler,
+      }).get('/testQueryParamNotArray')
+    );
+
+    request
+      .agent(app)
+      .get('/v1/testQueryParamNotArray?param=1&param=2')
+      .expect(
+        400,
+        "Error: Parameter : param does not respect its type (or if an array, at least one element doesn't respect the item type).\n"
+      )
+      .end(done);
+  });
+});
+
 describe('AllowNull = true / AllowNull = false', () => {
   var server: Application;
   var swaggerFile: any;
