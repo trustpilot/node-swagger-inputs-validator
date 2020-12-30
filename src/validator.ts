@@ -228,7 +228,7 @@ export class SwaggerInputsValidator {
                 new Error(
                   'Parameter : ' +
                     parameter.name +
-                    " does not respect its type (or if an array, at least one element isn't a primitive)."
+                    " does not respect its type (or if an array, at least one element doesn't respect the item type)."
                 )
               );
             }
