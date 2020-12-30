@@ -62,7 +62,8 @@
   "husky": {
     "hooks": {
       "commit-msg": "npx commitlint -E HUSKY_GIT_PARAMS --extends @commitlint/config-conventional",
-      "pre-push": "npm run lint && npm test"
+      "pre-commit": "npm run lint",
+      "pre-push": "npm test"
     }
   }
 }
