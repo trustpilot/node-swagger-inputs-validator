@@ -596,6 +596,218 @@ describe('query param array validation', () => {
       )
       .end(done);
   });
+
+  describe('enum tests', () => {
+    it('should resolve - all of the item values in the array matches enum values', (done) => {
+      var app = express();
+
+      app.get(
+        '/v1/testQueryArrayParamsWithEnums',
+        new Validator.SwaggerInputsValidator(swaggerFile, {
+          onError: errorHandler,
+        }).get('/testQueryArrayParamsWithEnums'),
+        function (req, res) {
+          res.status(200).json({
+            param: req.query.strParam,
+          });
+        }
+      );
+
+      request
+        .agent(app)
+        .get(
+          '/v1/testQueryArrayParamsWithEnums?strParam=ok&strParam=valid&strParam=accepted'
+        )
+        .expect(200, { param: ['ok', 'valid', 'accepted'] })
+        .end(done);
+    });
+
+    it('should fail - any of the item values in the array does not exist in the enum', (done) => {
+      var app = express();
+
+      app.get(
+        '/v1/testQueryArrayParamsWithEnums',
+        new Validator.SwaggerInputsValidator(swaggerFile, {
+          onError: errorHandler,
+        }).get('/testQueryArrayParamsWithEnums')
+      );
+
+      request
+        .agent(app)
+        .get(
+          '/v1/testQueryArrayParamsWithEnums?strParam=ok&strParam=notOk&strParam=accepted'
+        )
+        .expect(400, 'Error: Parameter : strParam has an unauthorized value.\n')
+        .end(done);
+    });
+
+    it('should resolve - the single item matches an enum value', (done) => {
+      var app = express();
+
+      app.get(
+        '/v1/testQueryArrayParamsWithEnums',
+        new Validator.SwaggerInputsValidator(swaggerFile, {
+          onError: errorHandler,
+        }).get('/testQueryArrayParamsWithEnums'),
+        function (req, res) {
+          res.status(200).json({
+            param: req.query.strParam,
+          });
+        }
+      );
+
+      request
+        .agent(app)
+        .get('/v1/testQueryArrayParamsWithEnums?strParam=ok')
+        .expect(200, { param: 'ok' })
+        .end(done);
+    });
+
+    it('should fail - the single item doesnt match an enum value', (done) => {
+      var app = express();
+
+      app.get(
+        '/v1/testQueryArrayParamsWithEnums',
+        new Validator.SwaggerInputsValidator(swaggerFile, {
+          onError: errorHandler,
+        }).get('/testQueryArrayParamsWithEnums')
+      );
+
+      request
+        .agent(app)
+        .get('/v1/testQueryArrayParamsWithEnums?strParam=notOk')
+        .expect(400, 'Error: Parameter : strParam has an unauthorized value.\n')
+        .end(done);
+    });
+
+    it('should resolve - all of the integer item values in the array matches enum values', (done) => {
+      var app = express();
+
+      app.get(
+        '/v1/testQueryArrayParamsWithEnums',
+        new Validator.SwaggerInputsValidator(swaggerFile, {
+          onError: errorHandler,
+        }).get('/testQueryArrayParamsWithEnums'),
+        function (req, res) {
+          res.status(200).json({
+            param: req.query.intParam,
+          });
+        }
+      );
+
+      request
+        .agent(app)
+        .get('/v1/testQueryArrayParamsWithEnums?intParam=1&intParam=2')
+        .expect((res) => {
+          if (res.status !== 200) {
+            console.log(`${res.status} - ${res.text}`);
+          }
+        })
+        .expect(200, { param: ['1', '2'] })
+        .end(done);
+    });
+
+    it('should fail - the single integer param item doesnt match an enum value', (done) => {
+      var app = express();
+
+      app.get(
+        '/v1/testQueryArrayParamsWithEnums',
+        new Validator.SwaggerInputsValidator(swaggerFile, {
+          onError: errorHandler,
+        }).get('/testQueryArrayParamsWithEnums')
+      );
+
+      request
+        .agent(app)
+        .get('/v1/testQueryArrayParamsWithEnums?intParam=4')
+        .expect(400, 'Error: Parameter : intParam has an unauthorized value.\n')
+        .end(done);
+    });
+
+    it('should resolve - all of the number item values in the array matches enum values', (done) => {
+      var app = express();
+
+      app.get(
+        '/v1/testQueryArrayParamsWithEnums',
+        new Validator.SwaggerInputsValidator(swaggerFile, {
+          onError: errorHandler,
+        }).get('/testQueryArrayParamsWithEnums'),
+        function (req, res) {
+          res.status(200).json({
+            param: req.query.numParam,
+          });
+        }
+      );
+
+      request
+        .agent(app)
+        .get('/v1/testQueryArrayParamsWithEnums?numParam=1&numParam=2.5')
+        .expect((res) => {
+          console.log(`${res.status} - ${res.text}`);
+        })
+        .expect(200, { param: ['1', '2.5'] })
+        .end(done);
+    });
+
+    it('should fail - the single numParam item doesnt match an enum value', (done) => {
+      var app = express();
+
+      app.get(
+        '/v1/testQueryArrayParamsWithEnums',
+        new Validator.SwaggerInputsValidator(swaggerFile, {
+          onError: errorHandler,
+        }).get('/testQueryArrayParamsWithEnums')
+      );
+
+      request
+        .agent(app)
+        .get('/v1/testQueryArrayParamsWithEnums?numParam=4')
+        .expect(400, 'Error: Parameter : numParam has an unauthorized value.\n')
+        .end(done);
+    });
+
+    it('should resolve - all of the boolean item values in the array matches enum values', (done) => {
+      var app = express();
+
+      app.get(
+        '/v1/testQueryArrayParamsWithEnums',
+        new Validator.SwaggerInputsValidator(swaggerFile, {
+          onError: errorHandler,
+        }).get('/testQueryArrayParamsWithEnums'),
+        function (req, res) {
+          res.status(200).json({
+            param: req.query.boolParam,
+          });
+        }
+      );
+
+      request
+        .agent(app)
+        .get('/v1/testQueryArrayParamsWithEnums?boolParam=true&boolParam=true')
+        .expect(200, { param: ['true', 'true'] })
+        .end(done);
+    });
+
+    it('should fail - the single boolean item doesnt match an enum value', (done) => {
+      var app = express();
+
+      app.get(
+        '/v1/testQueryArrayParamsWithEnums',
+        new Validator.SwaggerInputsValidator(swaggerFile, {
+          onError: errorHandler,
+        }).get('/testQueryArrayParamsWithEnums')
+      );
+
+      request
+        .agent(app)
+        .get('/v1/testQueryArrayParamsWithEnums?boolParam=false')
+        .expect(
+          400,
+          'Error: Parameter : boolParam has an unauthorized value.\n'
+        )
+        .end(done);
+    });
+  });
 });
 
 describe('AllowNull = true / AllowNull = false', () => {

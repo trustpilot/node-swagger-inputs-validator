@@ -186,6 +186,25 @@ export class SwaggerInputsValidator {
     return null;
   };
 
+  private itemConversion = (value: string, type: string): any => {
+    switch (type) {
+      case 'string':
+        return value;
+
+      case 'integer':
+      case 'number':
+        return Number(value);
+
+      case 'boolean':
+        const lowerValue = value.toLowerCase();
+        if (['true', 'false'].indexOf(lowerValue) > -1) {
+          return lowerValue === 'true';
+        }
+    }
+
+    throw Error(`Unable to convert ${value} to type ${type}`);
+  };
+
   /**
     private method
     @param swaggerParameters : the swagger parameter that you have to respect (given a certain url)
@@ -232,24 +251,42 @@ export class SwaggerInputsValidator {
                 )
               );
             }
+
             //We control now the authorized values present within enum
-            if (
-              parameter.enum &&
-              parameter.enum.indexOf(queryParameters[parameter.name]) === -1
-            ) {
-              // Ignore empty non-mandatory params
-              if (
-                queryParameters[parameter.name] ||
-                parameter.required === true
+            let hasEnumError = false;
+            if (queryParameters[parameter.name]) {
+              if (parameter.type === 'array') {
+                if (parameter.items && parameter.items.enum) {
+                  const arr = Array.isArray(queryParameters[parameter.name])
+                    ? queryParameters[parameter.name]
+                    : [queryParameters[parameter.name]];
+
+                  const typedArr = arr.map((x: string) =>
+                    this.itemConversion(x, parameter.items.type)
+                  );
+
+                  hasEnumError = !typedArr.every(
+                    (x: any) => parameter.items.enum.indexOf(x) > -1
+                  );
+                }
+              } else if (
+                parameter.enum &&
+                parameter.enum.indexOf(queryParameters[parameter.name]) === -1
               ) {
-                errorsToReturn.push(
-                  new Error(
-                    'Parameter : ' +
-                      parameter.name +
-                      ' has an unauthorized value.'
-                  )
-                );
+                hasEnumError = true;
               }
+            } else {
+              hasEnumError = parameter.required === true;
+            }
+
+            if (hasEnumError) {
+              errorsToReturn.push(
+                new Error(
+                  'Parameter : ' +
+                    parameter.name +
+                    ' has an unauthorized value.'
+                )
+              );
             }
           }
           break;
@@ -633,6 +670,7 @@ export class SwaggerInputsValidator {
           // Validate that the type is same as item type in the swagger array declaration
           return this.simpleTypeChecking(parameterToControl, {
             type: swaggerParameter.items.type,
+            format: swaggerParameter.items.format,
           });
         }
 
@@ -640,6 +678,7 @@ export class SwaggerInputsValidator {
         const invalidItem = parameterToControl.find((x: any) => {
           return !this.simpleTypeChecking(x, {
             type: swaggerParameter.items.type,
+            format: swaggerParameter.items.format,
           });
         });
 

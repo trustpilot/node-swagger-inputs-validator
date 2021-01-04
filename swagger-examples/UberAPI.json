@@ -566,6 +566,70 @@
           }
         }
       }
+    },
+    "/testQueryArrayParamsWithEnums": {
+      "get": {
+        "summary": "Test query array parameters",
+        "description": "Test query array parameters",
+        "parameters": [
+          {
+            "name": "strParam",
+            "in": "query",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["ok", "accepted", "valid"]
+            },
+            "description": "array of strings"
+          },
+          {
+            "name": "intParam",
+            "in": "query",
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "enum": [1, 2, 3]
+            },
+            "description": "array of integers"
+          },
+          {
+            "name": "numParam",
+            "in": "query",
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double",
+              "enum": [1.0, 2.5, 3.75]
+            },
+            "description": "array of numbers"
+          },
+          {
+            "name": "boolParam",
+            "in": "query",
+            "type": "array",
+            "items": {
+              "type": "boolean",
+              "enum": [true]
+            },
+            "description": "array of a single true boolean - pointless, but still :)"
+          }
+        ],
+        "tags": ["Array"],
+        "responses": {
+          "200": {
+            "description": "TestArrayResponse",
+            "schema": {
+              "$ref": "#/definitions/TestArrayResponse"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
